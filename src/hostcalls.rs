@@ -1546,7 +1546,7 @@ fn get_hostfunc(
         "proxy_increment_metric" => {
             Some(Func::wrap(
                 store,
-                |_caller: Caller<'_, ()>, _metric_id: i32, _offset: i32| -> i32 {
+                |_caller: Caller<'_, ()>, _metric_id: i32, _offset: i64| -> i32 {
                     // Default Function:
                     // Expectation:
                     println!(
@@ -1565,7 +1565,7 @@ fn get_hostfunc(
         "proxy_record_metric" => {
             Some(Func::wrap(
                 store,
-                |_caller: Caller<'_, ()>, _metric_id: i32, _value: i32| -> i32 {
+                |_caller: Caller<'_, ()>, _metric_id: i32, _value: i64| -> i32 {
                     // Default Function:
                     // Expectation:
                     println!(
