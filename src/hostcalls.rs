@@ -1520,107 +1520,87 @@ fn get_hostfunc(
 
         /* ---------------------------------- Metrics ---------------------------------- */
         "proxy_define_metric" => {
-            Some(Func::wrap(store, |_caller: Caller<'_, ()>| -> i32 {
-                // Default Function:
-                // Expectation:
-                println!(
-                    "[vm->host] proxy_define_metric() -> (...) status: {:?}",
-                    get_status()
-                );
-                println!(
-                    "[vm<-host] proxy_define_metric() -> (..) return: {:?}",
-                    Status::InternalFailure
-                );
-                return Status::InternalFailure as i32;
-            }))
+            Some(Func::wrap(
+                store,
+                |_caller: Caller<'_, ()>,
+                 _metric_type: i32,
+                 _name_data: i32,
+                 _name_size: i32,
+                 _return_id: i32|
+                 -> i32 {
+                    // Default Function:
+                    // Expectation:
+                    println!(
+                        "[vm->host] proxy_define_metric() -> (...) status: {:?}",
+                        get_status()
+                    );
+                    println!(
+                        "[vm<-host] proxy_define_metric() -> (..) return: {:?}",
+                        Status::InternalFailure
+                    );
+                    return Status::InternalFailure as i32;
+                },
+            ))
         }
 
         "proxy_increment_metric" => {
-            Some(Func::wrap(store, |_caller: Caller<'_, ()>| -> i32 {
-                // Default Function:
-                // Expectation:
-                println!(
-                    "[vm->host] proxy_increment_metric() -> (...) status: {:?}",
-                    get_status()
-                );
-                println!(
-                    "[vm<-host] proxy_increment_metric() -> (..) return: {:?}",
-                    Status::InternalFailure
-                );
-                return Status::InternalFailure as i32;
-            }))
+            Some(Func::wrap(
+                store,
+                |_caller: Caller<'_, ()>, _metric_id: i32, _offset: i32| -> i32 {
+                    // Default Function:
+                    // Expectation:
+                    println!(
+                        "[vm->host] proxy_increment_metric() -> (...) status: {:?}",
+                        get_status()
+                    );
+                    println!(
+                        "[vm<-host] proxy_increment_metric() -> (..) return: {:?}",
+                        Status::InternalFailure
+                    );
+                    return Status::InternalFailure as i32;
+                },
+            ))
         }
 
         "proxy_record_metric" => {
-            Some(Func::wrap(store, |_caller: Caller<'_, ()>| -> i32 {
-                // Default Function:
-                // Expectation:
-                println!(
-                    "[vm->host] proxy_record_metric() -> (...) status: {:?}",
-                    get_status()
-                );
-                println!(
-                    "[vm<-host] proxy_record_metric() -> (..) return: {:?}",
-                    Status::InternalFailure
-                );
-                return Status::InternalFailure as i32;
-            }))
+            Some(Func::wrap(
+                store,
+                |_caller: Caller<'_, ()>, _metric_id: i32, _value: i32| -> i32 {
+                    // Default Function:
+                    // Expectation:
+                    println!(
+                        "[vm->host] proxy_record_metric() -> (...) status: {:?}",
+                        get_status()
+                    );
+                    println!(
+                        "[vm<-host] proxy_record_metric() -> (..) return: {:?}",
+                        Status::InternalFailure
+                    );
+                    return Status::InternalFailure as i32;
+                },
+            ))
         }
 
         "proxy_get_metric" => {
-            Some(Func::wrap(store, |_caller: Caller<'_, ()>| -> i32 {
-                // Default Function:
-                // Expectation:
-                println!(
-                    "[vm->host] proxy_get_metric() -> (...) status: {:?}",
-                    get_status()
-                );
-                println!(
-                    "[vm<-host] proxy_get_metric() -> (..) return: {:?}",
-                    Status::InternalFailure
-                );
-                return Status::InternalFailure as i32;
-            }))
+            Some(Func::wrap(
+                store,
+                |_caller: Caller<'_, ()>, _metric_id: i32, _return_value: i32| -> i32 {
+                    // Default Function:
+                    // Expectation:
+                    println!(
+                        "[vm->host] proxy_get_metric() -> (...) status: {:?}",
+                        get_status()
+                    );
+                    println!(
+                        "[vm<-host] proxy_get_metric() -> (..) return: {:?}",
+                        Status::InternalFailure
+                    );
+                    return Status::InternalFailure as i32;
+                },
+            ))
         }
 
         /* ---------------------------------- System ---------------------------------- */
-        "clock_time_get" => Some(Func::wrap(
-            store,
-            |mut _caller: Caller<'_, ()>, _clock_id: i32, _precision: i64, _time: i32| -> i32 {
-                Status::Ok as i32
-            },
-        )),
-
-        "random_get" => Some(Func::wrap(
-            store,
-            |mut _caller: Caller<'_, ()>, _buf: i32, _buf_len: i32| -> i32 { Status::Ok as i32 },
-        )),
-
-        "fd_write" => Some(Func::wrap(
-            store,
-            |mut _caller: Caller<'_, ()>,
-             _param1: i32,
-             _param2: i32,
-             _param3: i32,
-             _param4: i32|
-             -> i32 { Status::Ok as i32 },
-        )),
-
-        "environ_get" => Some(Func::wrap(
-            store,
-            |mut _caller: Caller<'_, ()>, _param1: i32, _param2: i32| -> i32 { Status::Ok as i32 },
-        )),
-
-        "environ_sizes_get" => Some(Func::wrap(
-            store,
-            |mut _caller: Caller<'_, ()>, _param1: i32, _param2: i32| -> i32 { Status::Ok as i32 },
-        )),
-
-        "proc_exit" => Some(Func::wrap(
-            store,
-            |mut _caller: Caller<'_, ()>, _param1: i32| -> () { () },
-        )),
-
         "proxy_set_effective_context" => {
             Some(Func::wrap(
                 store,
