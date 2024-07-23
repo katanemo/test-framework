@@ -12,6 +12,23 @@ The basic usage of this test-framework is provided in the examples/ folder which
 contains mocking of proxy-wasm modules provided in the proxy-wasm-rust-sdk
 examples/.
 
+In order to run the examples:
+
+Compile the wasm module for the example:
+
+```sh
+cd ~/proxy-wasm-rust-sdk/examples/<example_name>
+cargo build --target wasm32-wasi --release
+```
+
+Run the test against the corresponding module
+
+```sh
+cd ~/test-framework
+cargo run --package proxy-wasm-test-framework --example <example_name> ~/src/proxy-wasm-rust-sdk/examples/<example_name>/target/wasm32-wasi/release/proxy_wasm_example_<example_name>.wasm
+```
+
+
 ## Supported
 
 - Low-level expectation setting over most host-side functions that are consumed

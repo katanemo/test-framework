@@ -43,6 +43,9 @@ fn main() -> Result<()> {
             (":path", "/hello"),
             (":authority", "developer"),
         ]))
+        .expect_log(Some(LogLevel::Info), Some("#2 -> :method: GET"))
+        .expect_log(Some(LogLevel::Info), Some("#2 -> :path: /hello"))
+        .expect_log(Some(LogLevel::Info), Some("#2 -> :authority: developer"))
         .expect_get_header_map_value(Some(MapType::HttpRequestHeaders), Some(":path"))
         .returning(Some("/hello"))
         .expect_send_local_response(
