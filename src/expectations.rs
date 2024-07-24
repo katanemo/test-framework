@@ -86,7 +86,7 @@ pub struct Expect {
         Option<Duration>,
         Option<u32>,
     )>,
-    metrics_create: Vec<i32>,
+    metrics_create: Vec<(i32, String)>,
     metrics_increment: Vec<(i32, i64)>,
     metrics_record: Vec<(i32, u64)>,
     metrics_get: Vec<(i32, u64)>,
@@ -580,12 +580,12 @@ impl Expect {
         }
     }
 
-    pub fn set_expect_metric_create(&mut self, metric_type: i32) {
+    pub fn set_expect_metric_create(&mut self, metric_type: i32, name: &str) {
         self.expect_count += 1;
-        self.metrics_create.push(metric_type);
+        self.metrics_create.push((metric_type, name.to_string()));
     }
 
-    pub fn get_expect_metric_create(&mut self, metric_type: i32) {
+    pub fn get_expect_metric_create(&mut self, metric_type: i32, name: &str) {
         match self.metrics_create.len() {
             0 => {
                 if !self.allow_unexpected {
@@ -596,7 +596,7 @@ impl Expect {
             _ => {
                 self.expect_count -= 1;
                 let expected_metric_type = self.metrics_create.remove(0);
-                let expect_status = expected_metric_type == metric_type;
+                let expect_status = expected_metric_type == (metric_type, name.to_string());
                 set_expect_status(expect_status);
             }
         }

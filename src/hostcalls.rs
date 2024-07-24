@@ -1525,8 +1525,8 @@ fn get_hostfunc(
                 store,
                 |mut caller: Caller<'_, ()>,
                  metric_type: i32,
-                 _name_data: i32,
-                 _name_size: i32,
+                 name_data: i32,
+                 name_size: i32,
                  return_id: i32|
                  -> i32 {
                     // Default Function:
@@ -1543,15 +1543,23 @@ fn get_hostfunc(
                         }
                     };
 
-                    EXPECT
-                        .lock()
-                        .unwrap()
-                        .staged
-                        .get_expect_metric_create(metric_type);
-
-                    let new_metric_id = HOST.lock().unwrap().staged.create_metric();
-
                     unsafe {
+                        let name_data_ptr = mem
+                            .data(&caller)
+                            .get(name_data as u32 as usize..)
+                            .and_then(|arr| arr.get(..name_size as u32 as usize));
+                        let string_name = name_data_ptr
+                            .map(|string_msg| std::str::from_utf8(string_msg).unwrap())
+                            .unwrap();
+
+                        EXPECT
+                            .lock()
+                            .unwrap()
+                            .staged
+                            .get_expect_metric_create(metric_type, string_name);
+
+                        let new_metric_id = HOST.lock().unwrap().staged.create_metric(string_name);
+
                         let return_id_ptr = mem.data_mut(&mut caller).get_unchecked_mut(
                             return_id as u32 as usize..return_id as u32 as usize + 4,
                         );

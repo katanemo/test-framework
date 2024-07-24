@@ -50,7 +50,8 @@ pub struct HostSettings {
     tick_period_millis: Duration,
     header_map_pairs: HashMap<i32, Vec<(String, String)>>,
     buffer_bytes: HashMap<i32, Bytes>,
-    metrics: HashMap<i32, i64>,
+    metrics_value: HashMap<i32, i64>,
+    metrics_ids: HashMap<String, i32>,
 }
 
 impl HostSettings {
@@ -62,7 +63,8 @@ impl HostSettings {
             tick_period_millis: Duration::new(0, 0),
             header_map_pairs: default_header_map_pairs(),
             buffer_bytes: default_buffer_bytes(),
-            metrics: HashMap::new(),
+            metrics_value: HashMap::new(),
+            metrics_ids: HashMap::new(),
         }
     }
 
@@ -199,25 +201,30 @@ impl HostSettings {
         self.header_map_pairs.insert(map_type, new_header_map);
     }
 
-    pub fn create_metric(&mut self) -> i32 {
-        let metric_id: i32 = self.metrics.len().try_into().unwrap();
-        self.metrics.insert(metric_id, 0);
+    pub fn create_metric(&mut self, name: &str) -> i32 {
+        let metric_id: i32 = self.metrics_value.len().try_into().unwrap();
+        self.metrics_value.insert(metric_id, 0);
+        self.metrics_ids.insert(name.to_string(), metric_id);
         metric_id
     }
 
     pub fn increment_metric(&mut self, metric_id: i32, offset: i64) {
-        let value = self.metrics.get_mut(&metric_id).unwrap();
+        let value = self.metrics_value.get_mut(&metric_id).unwrap();
         *value += offset;
     }
 
     pub fn record_metric(&mut self, metric_id: i32, new_value: i64) {
-        let value = self.metrics.get_mut(&metric_id).unwrap();
+        let value = self.metrics_value.get_mut(&metric_id).unwrap();
         *value = new_value;
     }
 
     pub fn get_metric(&self, metric_id: i32) -> u64 {
-        let value = *self.metrics.get(&metric_id).unwrap();
+        let value = *self.metrics_value.get(&metric_id).unwrap();
         u64::try_from(value).unwrap()
+    }
+
+    pub fn get_metric_id(&self, name: &str) -> i32 {
+        *self.metrics_ids.get(name).unwrap()
     }
 }
 
