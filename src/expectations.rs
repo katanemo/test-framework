@@ -87,8 +87,8 @@ pub struct Expect {
         Option<u32>,
     )>,
     metrics_create: Vec<i32>,
-    increment_metrics: Vec<(i32, i64)>,
-    record_metrics: Vec<(i32, u64)>,
+    metrics_increment: Vec<(i32, i64)>,
+    metrics_record: Vec<(i32, u64)>,
     metrics_get: Vec<(i32, u64)>,
 }
 
@@ -111,8 +111,8 @@ impl Expect {
             send_local_response: vec![],
             http_call: vec![],
             metrics_create: vec![],
-            increment_metrics: vec![],
-            record_metrics: vec![],
+            metrics_increment: vec![],
+            metrics_record: vec![],
             metrics_get: vec![],
         }
     }
@@ -604,7 +604,7 @@ impl Expect {
 
     pub fn set_expect_metric_increment(&mut self, metric_id: i32, offset: i64) {
         self.expect_count += 1;
-        self.increment_metrics.push((metric_id, offset));
+        self.metrics_increment.push((metric_id, offset));
     }
 
     pub fn get_expect_metric_increment(&mut self, metric_id: i32, offset: i64) {
@@ -617,7 +617,7 @@ impl Expect {
             }
             _ => {
                 self.expect_count -= 1;
-                let expected_metric_increment_tuple = self.increment_metrics.remove(0);
+                let expected_metric_increment_tuple = self.metrics_increment.remove(0);
                 let expect_status = expected_metric_increment_tuple == (metric_id, offset);
                 set_expect_status(expect_status);
             }
@@ -626,11 +626,11 @@ impl Expect {
 
     pub fn set_expect_metric_record(&mut self, metric_id: i32, value: u64) {
         self.expect_count += 1;
-        self.record_metrics.push((metric_id, value));
+        self.metrics_record.push((metric_id, value));
     }
 
     pub fn get_expect_metric_record(&mut self, metric_id: i32, value: u64) {
-        match self.record_metrics.len() {
+        match self.metrics_record.len() {
             0 => {
                 if !self.allow_unexpected {
                     self.expect_count -= 1;
@@ -639,7 +639,7 @@ impl Expect {
             }
             _ => {
                 self.expect_count -= 1;
-                let expected_metric_record_tuple = self.record_metrics.remove(0);
+                let expected_metric_record_tuple = self.metrics_record.remove(0);
                 let expect_status = expected_metric_record_tuple == (metric_id, value);
                 set_expect_status(expect_status);
             }
