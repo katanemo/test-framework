@@ -18,6 +18,7 @@ use crate::types::*;
 
 use lazy_static::lazy_static;
 use more_asserts::*;
+use std::convert::TryInto;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use wasmtime::*;
@@ -1522,19 +1523,40 @@ fn get_hostfunc(
         "proxy_define_metric" => {
             Some(Func::wrap(
                 store,
-                |_caller: Caller<'_, ()>,
+                |mut caller: Caller<'_, ()>,
                  metric_type: i32,
                  _name_data: i32,
                  _name_size: i32,
-                 _return_id: i32|
+                 return_id: i32|
                  -> i32 {
                     // Default Function:
                     // Expectation:
+                    let mem = match caller.get_export("memory") {
+                        Some(Extern::Memory(mem)) => mem,
+                        _ => {
+                            println!("Error: proxy_define_metric cannot get export \"memory\"");
+                            println!(
+                                "[vm<-host] proxy_define_metric() -> (..) return: {:?}",
+                                Status::InternalFailure
+                            );
+                            return Status::InternalFailure as i32;
+                        }
+                    };
+
                     EXPECT
                         .lock()
                         .unwrap()
                         .staged
                         .get_expect_metric_create(metric_type);
+
+                    let new_metric_id = HOST.lock().unwrap().staged.create_metric();
+
+                    unsafe {
+                        let return_id_ptr = mem.data_mut(&mut caller).get_unchecked_mut(
+                            return_id as u32 as usize..return_id as u32 as usize + 4,
+                        );
+                        return_id_ptr.copy_from_slice(&(new_metric_id as u32).to_le_bytes());
+                    }
 
                     println!(
                         "[vm->host] proxy_define_metric() -> (...) status: {:?}",
@@ -1554,18 +1576,31 @@ fn get_hostfunc(
         "proxy_increment_metric" => {
             Some(Func::wrap(
                 store,
-                |_caller: Caller<'_, ()>, _metric_id: i32, _offset: i64| -> i32 {
+                |_caller: Caller<'_, ()>, metric_id: i32, offset: i64| -> i32 {
                     // Default Function:
                     // Expectation:
+                    EXPECT
+                        .lock()
+                        .unwrap()
+                        .staged
+                        .get_expect_metric_increment(metric_id, offset);
+
+                    HOST.lock()
+                        .unwrap()
+                        .staged
+                        .increment_metric(metric_id, offset);
+
                     println!(
                         "[vm->host] proxy_increment_metric() -> (...) status: {:?}",
                         get_status()
                     );
                     println!(
                         "[vm<-host] proxy_increment_metric() -> (..) return: {:?}",
-                        Status::InternalFailure
+                        Status::Ok
                     );
-                    return Status::InternalFailure as i32;
+                    assert_ne!(get_status(), ExpectStatus::Failed);
+                    set_status(ExpectStatus::Unexpected);
+                    return Status::Ok as i32;
                 },
             ))
         }
@@ -1573,18 +1608,28 @@ fn get_hostfunc(
         "proxy_record_metric" => {
             Some(Func::wrap(
                 store,
-                |_caller: Caller<'_, ()>, _metric_id: i32, _value: i64| -> i32 {
+                |_caller: Caller<'_, ()>, metric_id: i32, value: i64| -> i32 {
                     // Default Function:
                     // Expectation:
+                    EXPECT
+                        .lock()
+                        .unwrap()
+                        .staged
+                        .get_expect_metric_record(metric_id, value.try_into().unwrap());
+
+                    HOST.lock().unwrap().staged.record_metric(metric_id, value);
+
                     println!(
                         "[vm->host] proxy_record_metric() -> (...) status: {:?}",
                         get_status()
                     );
                     println!(
                         "[vm<-host] proxy_record_metric() -> (..) return: {:?}",
-                        Status::InternalFailure
+                        Status::Ok
                     );
-                    return Status::InternalFailure as i32;
+                    assert_ne!(get_status(), ExpectStatus::Failed);
+                    set_status(ExpectStatus::Unexpected);
+                    return Status::Ok as i32;
                 },
             ))
         }
