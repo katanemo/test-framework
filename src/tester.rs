@@ -289,6 +289,13 @@ impl Tester {
         self
     }
 
+    pub fn expect_metric_get(&mut self, metric_id: i32, value: u64) -> &mut Self {
+        self.get_expect_handle()
+            .staged
+            .set_expect_metric_get(metric_id, value);
+        self
+    }
+
     /* ------------------------------------- High-level Expectation Setting ------------------------------------- */
 
     pub fn set_quiet(&mut self, quiet: bool) {

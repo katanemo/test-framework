@@ -1637,18 +1637,48 @@ fn get_hostfunc(
         "proxy_get_metric" => {
             Some(Func::wrap(
                 store,
-                |_caller: Caller<'_, ()>, _metric_id: i32, _return_value: i32| -> i32 {
+                |mut caller: Caller<'_, ()>, metric_id: i32, return_value: i32| -> i32 {
                     // Default Function:
                     // Expectation:
+
+                    let mem = match caller.get_export("memory") {
+                        Some(Extern::Memory(mem)) => mem,
+                        _ => {
+                            println!("Error: proxy_define_metric cannot get export \"memory\"");
+                            println!(
+                                "[vm<-host] proxy_define_metric() -> (..) return: {:?}",
+                                Status::InternalFailure
+                            );
+                            return Status::InternalFailure as i32;
+                        }
+                    };
+
+                    let metric_value = HOST.lock().unwrap().staged.get_metric(metric_id);
+
+                    EXPECT
+                        .lock()
+                        .unwrap()
+                        .staged
+                        .get_expect_metric_get(metric_id, metric_value);
+
+                    unsafe {
+                        let return_value_ptr = mem.data_mut(&mut caller).get_unchecked_mut(
+                            return_value as u32 as usize..return_value as u32 as usize + 4,
+                        );
+                        return_value_ptr.copy_from_slice(&(metric_value as u32).to_le_bytes());
+                    }
+
                     println!(
                         "[vm->host] proxy_get_metric() -> (...) status: {:?}",
                         get_status()
                     );
                     println!(
                         "[vm<-host] proxy_get_metric() -> (..) return: {:?}",
-                        Status::InternalFailure
+                        Status::Ok
                     );
-                    return Status::InternalFailure as i32;
+                    assert_ne!(get_status(), ExpectStatus::Failed);
+                    set_status(ExpectStatus::Unexpected);
+                    return Status::Ok as i32;
                 },
             ))
         }

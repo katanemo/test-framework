@@ -16,6 +16,7 @@ use crate::hostcalls::serial_utils::serialize_map;
 use crate::types::*;
 
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::time::Duration;
 
@@ -214,8 +215,9 @@ impl HostSettings {
         *value = new_value;
     }
 
-    pub fn get_metric(&self, metric_id: i32) -> i64 {
-        *self.metrics.get(&metric_id).unwrap()
+    pub fn get_metric(&self, metric_id: i32) -> u64 {
+        let value = *self.metrics.get(&metric_id).unwrap();
+        u64::try_from(value).unwrap()
     }
 }
 
