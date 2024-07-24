@@ -269,6 +269,8 @@ impl Tester {
     }
 
     pub fn expect_metric_creation(&mut self, metric_type: MetricType, name: &str) -> &mut Self {
+        self.get_settings_handle().staged.create_metric(name);
+
         self.get_expect_handle()
             .staged
             .set_expect_metric_create(metric_type as i32, name);

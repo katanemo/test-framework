@@ -1558,12 +1558,12 @@ fn get_hostfunc(
                             .staged
                             .get_expect_metric_create(metric_type, string_name);
 
-                        let new_metric_id = HOST.lock().unwrap().staged.create_metric(string_name);
+                        let metric_id = HOST.lock().unwrap().staged.get_metric_id(string_name);
 
                         let return_id_ptr = mem.data_mut(&mut caller).get_unchecked_mut(
                             return_id as u32 as usize..return_id as u32 as usize + 4,
                         );
-                        return_id_ptr.copy_from_slice(&(new_metric_id as u32).to_le_bytes());
+                        return_id_ptr.copy_from_slice(&(metric_id as u32).to_le_bytes());
                     }
 
                     println!(
