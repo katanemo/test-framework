@@ -68,14 +68,6 @@ pub fn generate_import_list(
     (HOST.clone(), EXPECT.clone())
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(all(target_arch = "wasm32", target_os = "unknown"))] {
-        fn get_allocator(caller: &mut Caller<'_, ()>) -> Option<Extern> { caller.get_export("malloc") }
-    } else {
-        fn get_allocator(caller: &mut Caller<'_, ()>) -> Option<Extern> { caller.get_export("proxy_on_memory_allocate")}
-    }
-}
-
 fn get_hostfunc(
     store: &mut Store<()>,
     _abi_version: AbiVersion,
@@ -682,7 +674,7 @@ fn get_hostfunc(
                         }
                     };
 
-                    let malloc = match get_allocator(&mut caller) {
+                    let malloc = match caller.get_export("malloc") {
                         Some(Extern::Func(func)) => func,
                         _ => {
                             println!(
@@ -820,7 +812,7 @@ fn get_hostfunc(
                         }
                     };
 
-                    let malloc = match get_allocator(&mut caller) {
+                    let malloc = match caller.get_export("malloc") {
                         Some(Extern::Func(func)) => func,
                         _ => {
                             println!(
@@ -1128,7 +1120,7 @@ fn get_hostfunc(
                         }
                     };
 
-                    let malloc = match get_allocator(&mut caller) {
+                    let malloc = match caller.get_export("malloc") {
                         Some(Extern::Func(func)) => func,
                         _ => {
                             println!("Error: proxy_get_buffer_bytes cannot get export \"malloc\"");
