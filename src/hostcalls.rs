@@ -1523,22 +1523,30 @@ fn get_hostfunc(
             Some(Func::wrap(
                 store,
                 |_caller: Caller<'_, ()>,
-                 _metric_type: i32,
+                 metric_type: i32,
                  _name_data: i32,
                  _name_size: i32,
                  _return_id: i32|
                  -> i32 {
                     // Default Function:
                     // Expectation:
+                    EXPECT
+                        .lock()
+                        .unwrap()
+                        .staged
+                        .get_expect_metric_create(metric_type);
+
                     println!(
                         "[vm->host] proxy_define_metric() -> (...) status: {:?}",
                         get_status()
                     );
                     println!(
                         "[vm<-host] proxy_define_metric() -> (..) return: {:?}",
-                        Status::InternalFailure
+                        Status::Ok
                     );
-                    return Status::InternalFailure as i32;
+                    assert_ne!(get_status(), ExpectStatus::Failed);
+                    set_status(ExpectStatus::Unexpected);
+                    return Status::Ok as i32;
                 },
             ))
         }

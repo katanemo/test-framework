@@ -268,6 +268,13 @@ impl Tester {
         ExpectHttpCall::expecting(self, upstream, headers, body, trailers, timeout)
     }
 
+    pub fn expect_metric_creation(&mut self, metric_type: MetricType) -> &mut Self {
+        self.get_expect_handle()
+            .staged
+            .set_expect_metric_create(metric_type as i32);
+        self
+    }
+
     /* ------------------------------------- High-level Expectation Setting ------------------------------------- */
 
     pub fn set_quiet(&mut self, quiet: bool) {

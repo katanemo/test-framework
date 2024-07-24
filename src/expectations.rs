@@ -86,6 +86,7 @@ pub struct Expect {
         Option<Duration>,
         Option<u32>,
     )>,
+    metrics: Vec<i32>,
 }
 
 impl Expect {
@@ -106,6 +107,7 @@ impl Expect {
             add_header_map_value: vec![],
             send_local_response: vec![],
             http_call: vec![],
+            metrics: vec![],
         }
     }
 
@@ -568,6 +570,28 @@ impl Expect {
                             .unwrap_or(timeout);
                 set_expect_status(expect_status);
                 http_call_tuple.5
+            }
+        }
+    }
+
+    pub fn set_expect_metric_create(&mut self, metric_type: i32) {
+        self.expect_count += 1;
+        self.metrics.push(metric_type);
+    }
+
+    pub fn get_expect_metric_create(&mut self, metric_type: i32) {
+        match self.metrics.len() {
+            0 => {
+                if !self.allow_unexpected {
+                    self.expect_count -= 1;
+                }
+                set_status(ExpectStatus::Unexpected);
+            }
+            _ => {
+                self.expect_count -= 1;
+                let expected_metric_type = self.metrics.remove(0);
+                let expect_status = expected_metric_type == metric_type;
+                set_expect_status(expect_status);
             }
         }
     }
