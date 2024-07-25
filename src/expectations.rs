@@ -15,8 +15,6 @@
 use crate::hostcalls::{serial_utils::serialize_map, set_status};
 use crate::types::*;
 
-use ::function_name::named;
-
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 fn set_expect_status(checks: bool) {
