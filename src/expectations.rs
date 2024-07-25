@@ -86,6 +86,10 @@ pub struct Expect {
         Option<Duration>,
         Option<u32>,
     )>,
+    metrics_create: Vec<(i32, String)>,
+    metrics_increment: Vec<(i32, i64)>,
+    metrics_record: Vec<(i32, u64)>,
+    metrics_get: Vec<(i32, u64)>,
 }
 
 impl Expect {
@@ -106,6 +110,10 @@ impl Expect {
             add_header_map_value: vec![],
             send_local_response: vec![],
             http_call: vec![],
+            metrics_create: vec![],
+            metrics_increment: vec![],
+            metrics_record: vec![],
+            metrics_get: vec![],
         }
     }
 
@@ -568,6 +576,94 @@ impl Expect {
                             .unwrap_or(timeout);
                 set_expect_status(expect_status);
                 http_call_tuple.5
+            }
+        }
+    }
+
+    pub fn set_expect_metric_create(&mut self, metric_type: i32, name: &str) {
+        self.expect_count += 1;
+        self.metrics_create.push((metric_type, name.to_string()));
+    }
+
+    pub fn get_expect_metric_create(&mut self, metric_type: i32, name: &str) {
+        match self.metrics_create.len() {
+            0 => {
+                if !self.allow_unexpected {
+                    self.expect_count -= 1;
+                }
+                set_status(ExpectStatus::Unexpected);
+            }
+            _ => {
+                self.expect_count -= 1;
+                let expected_metric_type = self.metrics_create.remove(0);
+                let expect_status = expected_metric_type == (metric_type, name.to_string());
+                set_expect_status(expect_status);
+            }
+        }
+    }
+
+    pub fn set_expect_metric_increment(&mut self, metric_id: i32, offset: i64) {
+        self.expect_count += 1;
+        self.metrics_increment.push((metric_id, offset));
+    }
+
+    pub fn get_expect_metric_increment(&mut self, metric_id: i32, offset: i64) {
+        match self.metrics_increment.len() {
+            0 => {
+                if !self.allow_unexpected {
+                    self.expect_count -= 1;
+                }
+                set_status(ExpectStatus::Unexpected);
+            }
+            _ => {
+                self.expect_count -= 1;
+                let expected_metric_increment_tuple = self.metrics_increment.remove(0);
+                let expect_status = expected_metric_increment_tuple == (metric_id, offset);
+                set_expect_status(expect_status);
+            }
+        }
+    }
+
+    pub fn set_expect_metric_record(&mut self, metric_id: i32, value: u64) {
+        self.expect_count += 1;
+        self.metrics_record.push((metric_id, value));
+    }
+
+    pub fn get_expect_metric_record(&mut self, metric_id: i32, value: u64) {
+        match self.metrics_record.len() {
+            0 => {
+                if !self.allow_unexpected {
+                    self.expect_count -= 1;
+                }
+                set_status(ExpectStatus::Unexpected);
+            }
+            _ => {
+                self.expect_count -= 1;
+                let expected_metric_record_tuple = self.metrics_record.remove(0);
+                let expect_status = expected_metric_record_tuple == (metric_id, value);
+                set_expect_status(expect_status);
+            }
+        }
+    }
+
+    pub fn set_expect_metric_get(&mut self, metric_id: i32, value: u64) {
+        self.expect_count += 1;
+        self.metrics_get.push((metric_id, value));
+    }
+
+    pub fn get_expect_metric_get(&mut self, metric_id: i32, value: u64) {
+        match self.metrics_get.len() {
+            0 => {
+                if !self.allow_unexpected {
+                    self.expect_count -= 1;
+                }
+                set_status(ExpectStatus::Unexpected);
+            }
+            _ => {
+                self.expect_count -= 1;
+                let expected_get_metric_tuple = self.metrics_get.remove(0);
+                let expect_status = expected_get_metric_tuple == (metric_id, value);
+                set_expect_status(expect_status);
             }
         }
     }
