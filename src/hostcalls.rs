@@ -68,6 +68,14 @@ pub fn generate_import_list(
     (HOST.clone(), EXPECT.clone())
 }
 
+cfg_if::cfg_if! {
+    if #[cfg(all(target_arch = "wasm32", target_os = "unknown"))] {
+        fn get_allocator(caller: &mut Caller<'_, ()>) -> Option<Extern> { get_allocator(&mut caller) }
+    } else {
+        fn get_allocator(caller: &mut Caller<'_, ()>) -> Option<Extern> { caller.get_export("proxy_on_memory_allocate")}
+    }
+}
+
 fn get_hostfunc(
     store: &mut Store<()>,
     _abi_version: AbiVersion,
@@ -674,7 +682,7 @@ fn get_hostfunc(
                         }
                     };
 
-                    let malloc = match caller.get_export("malloc") {
+                    let malloc = match get_allocator(&mut caller) {
                         Some(Extern::Func(func)) => func,
                         _ => {
                             println!(
@@ -812,7 +820,7 @@ fn get_hostfunc(
                         }
                     };
 
-                    let malloc = match caller.get_export("malloc") {
+                    let malloc = match get_allocator(&mut caller) {
                         Some(Extern::Func(func)) => func,
                         _ => {
                             println!(
@@ -1120,7 +1128,7 @@ fn get_hostfunc(
                         }
                     };
 
-                    let malloc = match caller.get_export("malloc") {
+                    let malloc = match get_allocator(&mut caller) {
                         Some(Extern::Func(func)) => func,
                         _ => {
                             println!("Error: proxy_get_buffer_bytes cannot get export \"malloc\"");
@@ -1684,6 +1692,43 @@ fn get_hostfunc(
         }
 
         /* ---------------------------------- System ---------------------------------- */
+        "clock_time_get" => Some(Func::wrap(
+            store,
+            |mut _caller: Caller<'_, ()>, _clock_id: i32, _precision: i64, _time: i32| -> i32 {
+                Status::Ok as i32
+            },
+        )),
+
+        "random_get" => Some(Func::wrap(
+            store,
+            |mut _caller: Caller<'_, ()>, _buf: i32, _buf_len: i32| -> i32 { Status::Ok as i32 },
+        )),
+
+        "fd_write" => Some(Func::wrap(
+            store,
+            |mut _caller: Caller<'_, ()>,
+             _param1: i32,
+             _param2: i32,
+             _param3: i32,
+             _param4: i32|
+             -> i32 { Status::Ok as i32 },
+        )),
+
+        "environ_get" => Some(Func::wrap(
+            store,
+            |mut _caller: Caller<'_, ()>, _param1: i32, _param2: i32| -> i32 { Status::Ok as i32 },
+        )),
+
+        "environ_sizes_get" => Some(Func::wrap(
+            store,
+            |mut _caller: Caller<'_, ()>, _param1: i32, _param2: i32| -> i32 { Status::Ok as i32 },
+        )),
+
+        "proc_exit" => Some(Func::wrap(
+            store,
+            |mut _caller: Caller<'_, ()>, _param1: i32| -> () { () },
+        )),
+
         "proxy_set_effective_context" => {
             Some(Func::wrap(
                 store,

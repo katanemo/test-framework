@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{
-    expectations::Expect,
-    tester::{self, Tester},
-};
+use crate::tester::Tester;
 
 // As of now, the following expectations do not require "fn returning()" implementations and hence
 // no structure is provided for them. Setting of these expectations are built directly into tester.rs:
