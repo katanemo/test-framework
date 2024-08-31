@@ -1729,6 +1729,11 @@ fn get_hostfunc(
             |mut _caller: Caller<'_, ()>, _param1: i32| -> () { () },
         )),
 
+        "sched_yield" => Some(Func::wrap(
+            store,
+            |mut _caller: Caller<'_, ()>, _param1: i32| -> () { () },
+        )),
+
         "proxy_set_effective_context" => {
             Some(Func::wrap(
                 store,
