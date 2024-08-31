@@ -894,19 +894,8 @@ fn get_hostfunc(
                                 println!("[vm<-host] proxy_get_header_map_value(...) -> (return_value_data={}, return_value_size={}) return: {:?}", string_value, string_value.len(), Status::Ok);
                             }
                             None => {
-                                let return_value_data_ptr =
-                                    mem.data_mut(&mut caller).get_unchecked_mut(
-                                        return_value_data as u32 as usize
-                                            ..return_value_data as u32 as usize + 4,
-                                    );
-                                return_value_data_ptr = std::ptr::null();
-
-                                let return_value_size_ptr =
-                                    mem.data_mut(&mut caller).get_unchecked_mut(
-                                        return_value_size as u32 as usize
-                                            ..return_value_size as u32 as usize + 4,
-                                    );
-                                return_value_size_ptr = std::ptr::null();
+                                let data_ptr = mem.data_ptr(&mut caller).offset(return_value_data);
+                                data_ptr = std::ptr::null();
                             }
                         }
                     }
