@@ -808,7 +808,7 @@ fn get_hostfunc(
                  -> i32 {
                     // Default Function: respond with a default header map value corresponding to map_type (if exists)
                     // Expectation: respond with set expected header map value for the given key and map_type
-                    // Panics if there is no header map value in expectation or host simulator for the provided map_type and key
+                    // Panics if there is no header map value in expectation or host simulator for the provided map_type and key and one was expected
                     let mem = match caller.get_export("memory") {
                         Some(Extern::Memory(mem)) => mem,
                         _ => {
@@ -832,7 +832,7 @@ fn get_hostfunc(
                     };
 
                     unsafe {
-                        let (string_key, string_value) = {
+                        let (string_key, maybe_string_value) = {
                             let key_data_ptr = mem
                                 .data(&caller)
                                 .get(key_data as u32 as usize..)
@@ -841,59 +841,74 @@ fn get_hostfunc(
                                 .map(|string_msg| std::str::from_utf8(string_msg).unwrap())
                                 .unwrap();
 
-                            let string_value = match EXPECT
+                            let maybe_string_value = EXPECT
                                 .lock()
                                 .unwrap()
                                 .staged
                                 .get_expect_get_header_map_value(map_type, string_key)
-                            {
-                                Some(expect_string_value) => expect_string_value,
-                                None => {
-                                    match HOST.lock().unwrap().staged.get_header_map_value(map_type, &string_key) {
-                                        Some(host_string_value) => host_string_value,
-                                        None => panic!("Error: proxy_get_header_map_value | no header map value for key {}", string_key)}
-                                }
-                            };
-                            (string_key.to_string(), string_value)
+                                .or_else(|| {
+                                    HOST.lock()
+                                        .unwrap()
+                                        .staged
+                                        .get_header_map_value(map_type, &string_key)
+                                });
+                            (string_key.to_string(), maybe_string_value)
                         };
 
-                        let value_data_add = {
-                            let mut result = [Val::I32(0)];
-                            malloc
-                                .call(
-                                    &mut caller,
-                                    &[Val::I32(string_value.len() as i32)],
-                                    &mut result,
-                                )
-                                .unwrap();
-                            result[0].i32().unwrap() as u32 as usize
-                        };
+                        match maybe_string_value {
+                            Some(string_value) => {
+                                let value_data_add = {
+                                    let mut result = [Val::I32(0)];
+                                    malloc
+                                        .call(
+                                            &mut caller,
+                                            &[Val::I32(string_value.len() as i32)],
+                                            &mut result,
+                                        )
+                                        .unwrap();
+                                    result[0].i32().unwrap() as u32 as usize
+                                };
 
-                        let value_data_ptr = mem
-                            .data_mut(&mut caller)
-                            .get_unchecked_mut(value_data_add..value_data_add + string_value.len());
-                        value_data_ptr.copy_from_slice((&string_value).as_bytes());
+                                let value_data_ptr = mem.data_mut(&mut caller).get_unchecked_mut(
+                                    value_data_add..value_data_add + string_value.len(),
+                                );
+                                value_data_ptr.copy_from_slice((&string_value).as_bytes());
 
-                        let return_value_data_ptr = mem.data_mut(&mut caller).get_unchecked_mut(
-                            return_value_data as u32 as usize
-                                ..return_value_data as u32 as usize + 4,
-                        );
-                        return_value_data_ptr
-                            .copy_from_slice(&(value_data_add as u32).to_le_bytes());
+                                let return_value_data_ptr =
+                                    mem.data_mut(&mut caller).get_unchecked_mut(
+                                        return_value_data as u32 as usize
+                                            ..return_value_data as u32 as usize + 4,
+                                    );
+                                return_value_data_ptr
+                                    .copy_from_slice(&(value_data_add as u32).to_le_bytes());
 
-                        let return_value_size_ptr = mem.data_mut(&mut caller).get_unchecked_mut(
-                            return_value_size as u32 as usize
-                                ..return_value_size as u32 as usize + 4,
-                        );
-                        return_value_size_ptr
-                            .copy_from_slice(&(string_value.len() as u32).to_le_bytes());
+                                let return_value_size_ptr =
+                                    mem.data_mut(&mut caller).get_unchecked_mut(
+                                        return_value_size as u32 as usize
+                                            ..return_value_size as u32 as usize + 4,
+                                    );
+                                return_value_size_ptr
+                                    .copy_from_slice(&(string_value.len() as u32).to_le_bytes());
 
-                        println!("[vm->host] proxy_get_header_map_value(map_type={}, key_data={}, key_size={}) -> (...) status: {:?}",
-                            map_type, string_key, key_size, get_status()
-                        );
-                        println!("[vm<-host] proxy_get_header_map_value(...) -> (return_value_data={}, return_value_size={}) return: {:?}",
-                            string_value, string_value.len(), Status::Ok
-                        );
+                                println!("[vm->host] proxy_get_header_map_value(map_type={}, key_data={}, key_size={}) -> (...) status: {:?}", map_type, string_key, key_size, get_status());
+                                println!("[vm<-host] proxy_get_header_map_value(...) -> (return_value_data={}, return_value_size={}) return: {:?}", string_value, string_value.len(), Status::Ok);
+                            }
+                            None => {
+                                let return_value_data_ptr =
+                                    mem.data_mut(&mut caller).get_unchecked_mut(
+                                        return_value_data as u32 as usize
+                                            ..return_value_data as u32 as usize + 4,
+                                    );
+                                return_value_data_ptr = std::ptr::null();
+
+                                let return_value_size_ptr =
+                                    mem.data_mut(&mut caller).get_unchecked_mut(
+                                        return_value_size as u32 as usize
+                                            ..return_value_size as u32 as usize + 4,
+                                    );
+                                return_value_size_ptr = std::ptr::null();
+                            }
+                        }
                     }
                     assert_ne!(get_status(), ExpectStatus::Failed);
                     set_status(ExpectStatus::Unexpected);
