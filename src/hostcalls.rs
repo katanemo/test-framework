@@ -1730,7 +1730,7 @@ fn get_hostfunc(
         )),
 
         "sched_yield" => Some(Func::wrap(store, |mut _caller: Caller<'_, ()>| -> i32 {
-            Status::Ok
+            Status::Ok as i32
         })),
 
         "proxy_set_effective_context" => {
