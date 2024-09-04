@@ -44,8 +44,8 @@ impl ExpectHandle {
     pub fn assert_stage(&self) {
         if self.staged.expect_count > 0 {
             panic!(
-                "Error: failed to consume all expectations - total remaining: {}",
-                self.staged.expect_count
+                "Error: failed to consume all expectations - total remaining: {}\n{:?}",
+                self.staged.expect_count, self.staged
             );
         } else if self.staged.expect_count < 0 {
             panic!(
