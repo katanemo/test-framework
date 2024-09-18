@@ -423,7 +423,7 @@ impl Expect {
                 let mut expect_status = map_type == header_map_tuple.0.unwrap_or(map_type);
                 println!(
                     "EXPECTED VALUE={} GIVEN VALUE={}",
-                    header_map_tuple.1.unwrap(),
+                    header_map_tuple.1.unwrap().as_ref(),
                     header_map_key
                 );
                 expect_status = expect_status
