@@ -421,6 +421,11 @@ impl Expect {
                 self.expect_count -= 1;
                 let header_map_tuple = self.remove_header_map_value.remove(0);
                 let mut expect_status = map_type == header_map_tuple.0.unwrap_or(map_type);
+                println!(
+                    "EXPECTED VALUE={} GIVEN VALUE={}",
+                    header_map_tuple.1.unwrap(),
+                    header_map_key
+                );
                 expect_status = expect_status
                     && header_map_key == &header_map_tuple.1.unwrap_or(header_map_key.to_string());
                 set_expect_status(expect_status);
